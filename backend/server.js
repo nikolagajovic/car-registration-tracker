@@ -15,6 +15,6 @@ app.use(bodyParser.json());
 app.use('/api', vehiclesRoutes);
 
 // Pokretanje servera
-app.listen(PORT, () => {
+app.listen(port, () => {
     console.log(`Server radi na http://localhost:${PORT}`);
   });

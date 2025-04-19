@@ -1,0 +1,11 @@
+#wrapper {
+    display: flex;
+    align-items: stretch;
+    min-height: 100vh;
+  }
+  #sidebar-wrapper {
+    width: 250px;
+    background: #343a40;
+    transition: all 0.3s ease;
+  }
+  
