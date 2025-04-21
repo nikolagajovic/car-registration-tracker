@@ -4,7 +4,7 @@ const bodyParser = require('body-parser');
 const vehiclesRoutes = require('./routes/vehiclesRoutes');
 
 const app = express();
-const port = 3000;
+const PORT = 3000;
 
 
 //Middleware
@@ -15,6 +15,6 @@ app.use(bodyParser.json());
 app.use('/api', vehiclesRoutes);
 
 // Pokretanje servera
-app.listen(port, () => {
+app.listen(PORT, () => {
     console.log(`Server radi na http://localhost:${PORT}`);
   });
