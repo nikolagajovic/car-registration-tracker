@@ -10,7 +10,7 @@ window.addEventListener('DOMContentLoaded', async () => {
     vehicles.forEach(vehicle => {
         const option = document.createElement('option');
         option.value = vehicle.id;
-        option.textContent = vehicle.type;
+        option.textContent = option.textContent = vehicle.type_name;;
         vehiclesType.appendChild(option);
     });
 });
@@ -22,9 +22,9 @@ form.addEventListener('submit', async (e) => {
 
     const vehicleData = {
         vehicleType: document.getElementById('vehicleType').value,
-        vehicleMark: document.getElementById('vehicleMark').value,
-        vehicleModel: document.getElementById('vehicleModel').value,
-        registrationNumber: document.getElementById('registrationNumber').value,
+        vehicleMark: document.getElementById('vehicleMark').value.trim(),
+        vehicleModel: document.getElementById('vehicleModel').value.trim(),
+        registrationNumber: document.getElementById('registrationNumber').value.trim(),
         registrationDate: document.getElementById('registrationDate').value,
         expirationDate: document.getElementById('expirationDate').value
     };

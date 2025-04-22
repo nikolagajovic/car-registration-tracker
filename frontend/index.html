@@ -33,7 +33,11 @@
             <form id="vehicleForm">
                 <div class="mb-3">
                     <label for="vehicleType" class="form-label">Vrsta vozila:</label>
-                    <select class="form-select" id="vehicleType" required></select>
+                    <select class="form-select" id="vehicleType" required>
+                        <option value="" disabled selected>-- Izaberi vrstu --</option>
+                    </select>
+                    
+
                 </div>
                 <div class="mb-3">
                     <label for="vehicleMark" class="form-label">Marka:</label>
@@ -45,7 +49,7 @@
                 </div>
                 <div class="mb-3">
                     <label for="restrationNumber" class="form-label">Broj registracije:</label>
-                    <input type="text" class="form-control" id="restrationNumber" required>
+                    <input type="text" class="form-control" id="registrationNumber" required>
                 </div>
                 <div class="mb-3">
                     <label for="registrationDate" class="form-label">Datum registracije:</label>
