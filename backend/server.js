@@ -39,16 +39,16 @@ app.get('/api/vehicle',  (req, res) => {
 
 // Funkcija za dodavanje novog vozila u bazu podataka
 app.post('/api/vehicles', (req, res) => {
-    const { vehicleType, vehicleMark, vehicleModel, registrationNumber, registrationDate, expirationDate } = req.body;
+    const { vehicleType, vehicleMark, vehicleModel, registrationNumber, registrationDate, expirationDate, phoneNumber, email } = req.body;
 
-    if (!vehicleType || !vehicleMark || !vehicleModel || !registrationNumber || !registrationDate || !expirationDate) {
+    if (!vehicleType || !vehicleMark || !vehicleModel || !registrationNumber || !registrationDate || !expirationDate || !phoneNumber || !email) {
         return res.status(400).json({ error: 'Sva polja su obavezna' });
     }
 
 
-    const query = 'INSERT INTO vehicles (vehicle_type_id, mark, model, registration_number, registration_date, expiration_date) VALUES (?, ?, ?, ?, ?, ?)';
+    const query = 'INSERT INTO vehicles (vehicle_type_id, mark, model, registration_number, registration_date, expiration_date, phone_number, email) VALUES (?, ?, ?, ?, ?, ?, ?, ?)';
 
-    const values = [vehicleType, vehicleMark, vehicleModel, registrationNumber, registrationDate, expirationDate];
+    const values = [vehicleType, vehicleMark, vehicleModel, registrationNumber, registrationDate, expirationDate, phoneNumber, email];
 
     db.query(query, values, (err, results) => {
         if (err) {

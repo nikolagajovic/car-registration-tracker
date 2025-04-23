@@ -26,7 +26,9 @@ form.addEventListener('submit', async (e) => {
         vehicleModel: document.getElementById('vehicleModel').value.trim(),
         registrationNumber: document.getElementById('registrationNumber').value.trim(),
         registrationDate: document.getElementById('registrationDate').value,
-        expirationDate: document.getElementById('expirationDate').value
+        expirationDate: document.getElementById('expirationDate').value,
+        phoneNumber: document.getElementById('phoneNumber').value.trim(),
+        email: document.getElementById('email').value.trim(),
     };
 
     const res = await fetch('http://localhost:3000/api/vehicles', {
