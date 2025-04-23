@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="sr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RegiTrack - Pregled Vozila</title> 
+
+     <!-- Bootstrap CSS -->
+     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet"
+     integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
+
+    <link rel="stylesheet" href="style.css">
+    </head>
+
+<body>
+
+    <!-- Sidebar -->
+    <div class="d-flex" id="wrapper">
+        <div class="bg-dark text-white border-end" id="sidebar-wrapper">
+            <div class="sidebar-heading border-bottom bg-dark text-white p-3">RegiTrack</div>
+            <div class="list-group list-group-flush">
+                <a href="index.html" class="list-group-item list-group-item-action bg-dark text-white p-3">Početna</a>
+                <a href="vehicles.html" class="list-group-item list-group-item-action bg-dark text-white p-3">Vozila</a>
+                <a href="calendar.html" class="list-group-item list-group-item-action bg-dark text-white p-3">Kalendar</a>
+            </div>
+        </div>
+
+        <div id="page-content-wrapper" class="flex-grow-1">
+            <div class="container-fluid p-4">
+                <h1 class="mb-4 text-center">Pregled Vozila</h1>
+
+                <div id="message" class="mt-4 mb-3"></div>
+
+                <div class="table-responsive"> <table class="table table-striped table-hover table-bordered">
+                        <thead class="table-dark">
+                            <tr>
+                                <th scope="col">Marka</th>
+                                <th scope="col">Model</th>
+                                <th scope="col">Registarski Broj</th>
+                                <th scope="col">Tip Vozila</th>
+                                <th scope="col">Datum Registracije</th>
+                                <th scope="col">Datum Isteka</th>
+                                </tr>
+                        </thead>
+                        <tbody id="vehicleTableBody">
+                            <tr>
+                                <td colspan="6" class="text-center">Učitavanje podataka...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="common.js"></script>
+    <script src="vehicles.js, main.js"></script>
+</body>
+
+</html>

@@ -48,3 +48,4 @@ form.addEventListener('submit', async (e) => {
         message.innerHTML = `<div class="alert alert-danger">${messageData.error}</div>`;
     }
 });
+
