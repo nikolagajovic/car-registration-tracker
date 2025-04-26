@@ -9,3 +9,8 @@
   background: #343a40;
   transition: all 0.3s ease;
 }
+
+table {
+  width: 100%;
+  table-layout: fixed;
+}

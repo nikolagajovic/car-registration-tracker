@@ -70,7 +70,7 @@ app.get('/api/vehicles', (req, res) => {
             v.registration_number,
             v.registration_date,
             v.expiration_date,
-            vt.type_name
+            vt.type_name,
             v.phone_number,
             v.email
         FROM
