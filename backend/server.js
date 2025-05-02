@@ -68,8 +68,8 @@ app.get('/api/vehicles', (req, res) => {
             v.mark,
             v.model,
             v.registration_number,
-            v.registration_date,
-            v.expiration_date,
+            DATE_FORMAT(v.registration_date, '%Y-%m-%d') AS registration_date,
+            DATE_FORMAT(v.expiration_date, '%Y-%m-%d') ASv.expiration_date,
             vt.type_name,
             v.phone_number,
             v.email
@@ -78,7 +78,7 @@ app.get('/api/vehicles', (req, res) => {
         LEFT JOIN
             vehicle_type vt ON v.vehicle_type_id = vt.id
         ORDER BY
-            v.expiration_date ASC
+            v.id DESC
     `;
     db.query(sql, (err, results) => {
         // Provera greške iz baze podataka
@@ -87,21 +87,8 @@ app.get('/api/vehicles', (req, res) => {
             return res.status(500).json({ error: 'Greška pri dohvatanju vozila iz baze podataka' });
         }
 
-        // Ako nema greške iz baze, obrađujemo rezultate (unutar callback-a)
-        try {
-            // Formatiranje datuma
-            const formattedResults = results.map(vehicle => ({
-                ...vehicle,
-                registration_date: vehicle.registration_date ? new Date(vehicle.registration_date).toLocaleDateString('sr-RS') : null,
-                expiration_date: vehicle.expiration_date ? new Date(vehicle.expiration_date).toLocaleDateString('sr-RS') : null,
-            }));
-
-            res.json(formattedResults); // Šalje formatirane podatke kao JSON
-
-        } catch (formatErr) {
-            console.error('Greška pri formatiranju rezultata:', formatErr);
-            res.status(500).json({ error: 'Greška pri obradi podataka vozila' });
-        }
+      res.json(results);
+        
     });
 })
 

@@ -3,10 +3,40 @@ const apiBaseUrl = 'http://localhost:3000/api';
 document.addEventListener('DOMContentLoaded', async () => {
     const vehiclesTableBody = document.getElementById('vehiclesTableBody');
     const messageDiv = document.getElementById('message');
+    const paginationControlsDiv = document.getElementById('paginationControls');
 
     const showMessage = (message, type = 'danger') => {
         messageDiv.innerHTML = message;
         messageDiv.className = `alert alert-${type} mt-4 mb-3`;
+    };
+
+    let allVehiclesData = [];
+    let currentPage = 1;
+
+    const renderPagination = () => {
+        if (!paginationControlsDiv) return;
+        paginationControlsDiv.innerHTML = '';
+        const totalItems = allVehiclesData.length;
+        const totalPages = Math.ceil(totalItems / 10);
+        if (totalPages <= 1) return;
+
+        const prevButton = document.createElement('button');
+        paginationControlsDiv.appendChild(prevButton);
+        const pageInfo = document.createElement('span');
+        paginationControlsDiv.appendChild(pageInfo);
+        const nextButton = document.createElement('button');
+        paginationControlsDiv.appendChild(nextButton);
+
+        prevButton.classList.add('btn', 'btn-outline-secondary', 'me-2');
+        prevButton.textContent = 'Nazad';
+        prevButton.id = 'prevPageBtn';
+        prevButton.disabled = (currentPage === 1);
+        pageInfo.classList.add('align-self-center', 'mx-2');
+        pageInfo.textContent = `Stranica ${currentPage} od ${totalPages}`;
+        nextButton.classList.add('btn', 'btn-outline-secondary', 'ms-2');
+        nextButton.textContent = 'Napred';
+        nextButton.id = 'nextPageBtn';
+        nextButton.disabled = (currentPage === totalPages);
     };
 
     const fetchAndDisplayVehicles = async () => {
