@@ -1,48 +1,82 @@
 const apiBaseUrl = 'http://localhost:3000/api';
+const rowsPerPage = 15;
+
+// Funkcija za prikazivanje poruka
+function showMessage(message, type = 'danger', messageElementId = 'message') {
+    const messageDiv = document.getElementById(messageElementId);
+    if (messageDiv) {
+        messageDiv.textContent = message;
+        messageDiv.className = `alert alert-${type} mt-4 mb-3`;
+    } else {
+        console.warn(`Element za poruke sa ID-jem '${messageElementId}' nije pronađen.`);
+    }
+}
 
 document.addEventListener('DOMContentLoaded', () => {
     const vehicleTableBody = document.getElementById('vehiclesTableBody');
     const messageDiv = document.getElementById('message');
+    const paginationControlsContainer = document.getElementById('paginationControls');
 
 
-    // Funkcija za dohvatanje svih vozila i popunjavanje tabele
-    const fetchAndInitTable = async () => {
-        vehicleTableBody.innerHTML = '<tr><td colspan="8" class="text-center">Učitavanje podataka...</td></tr>'; // Colspan=8
-        if (messageDiv) { // Provera da li messageDiv postoji
-            messageDiv.textContent = '';
-            messageDiv.className = 'mt-4 mb-3';
-        }
+    let allVehiclesData = [];
+    let currentPage = 1;
+    const colspanValue = 9; // 9 jer imamo 9 kolona u tabeli 
 
-        try {
-            const response = await fetch(`${apiBaseUrl}/vehicles`); 
 
-            if (!response.ok) {
-                let errorMsg = `HTTP greška! Status: ${response.status}`;
-                try { const errData = await response.json(); errorMsg = errData.error || errorMsg; } catch (e) { }
-                throw new Error(errorMsg);
-            }
+    // Funkcija za inicijalizaciju paginacije
+    const renderPagination = () => {
+        if (!paginationControlsContainer) return;
+        paginationControlsContainer.innerHTML = '';
+        const totalItems = allVehiclesData.length;
+        const totalPages = Math.ceil(totalItems / rowsPerPage);
+        if (totalPages <= 1) return;
 
-            // Ovde očekujemo samo niz vozila
-            const vehicles = await response.json();
+        const prevButton = document.createElement('button');
+        prevButton.classList.add('btn', 'btn-outline-secondary', 'me-2');
+        prevButton.textContent = 'Nazad';
+        prevButton.id = 'prevPageBtn';
+        prevButton.disabled = (currentPage === 1);
+        paginationControlsContainer.appendChild(prevButton);
 
-            // Očisti poruku o učitavanju
-            vehicleTableBody.innerHTML = '';
+        const pageInfo = document.createElement('span');
+        pageInfo.classList.add('align-self-center', 'mx-2');
+        pageInfo.textContent = `Stranica ${currentPage} od ${totalPages}`;
+        paginationControlsContainer.appendChild(pageInfo);
 
-            if (!vehicles || vehicles.length === 0) {
-                vehicleTableBody.innerHTML = '<tr><td colspan="8" class="text-center">Nema unetih vozila u bazi.</td></tr>';
-                // Inicijalizuj DataTables i na praznoj tabeli da bi se prikazale kontrole i poruka
-                initDataTables(true); // Dodajemo flag da znamo da je prazna
-                return; // Nema podataka za prikaz
-            }
+        const nextButton = document.createElement('button');
+        nextButton.classList.add('btn', 'btn-outline-secondary', 'ms-2');
+        nextButton.textContent = 'Napred';
+        nextButton.id = 'nextPageBtn';
+        nextButton.disabled = (currentPage === totalPages);
+        paginationControlsContainer.appendChild(nextButton);
+    };
 
-            // Popuni tbody svim redovima
-            vehicles.forEach(vehicle => {
+
+    // Funkcija za prikazivanje podataka za određenu stranicu
+    const displayPage = (page) => {
+        currentPage = page;
+        vehicleTableBody.innerHTML = '';
+
+        const startIndex = (page - 1) * rowsPerPage;
+        const endIndex = startIndex + rowsPerPage;
+        const vehiclesOnPage = allVehiclesData.slice(startIndex, endIndex);
+
+        // Koristi ažuriranu colspanValue
+        if (vehiclesOnPage.length === 0) {
+            const message = allVehiclesData.length > 0 ? `Nema podataka za prikaz na stranici ${page}.` : 'Nema unetih vozila u bazi.';
+            vehicleTableBody.innerHTML = `<tr><td colspan="${colspanValue}" class="text-center">${message}</td></tr>`;
+        } else {
+            // Prolazimo kroz niz i dodajemo 'index'
+            vehiclesOnPage.forEach((vehicle, index) => {
                 const row = document.createElement('tr');
+                // Izračunaj redni broj za prikaz (nezavisno od vehicle.id)
+                const rowNumber = startIndex + index + 1;
 
-                let expirationDateCellStyle = ''; // Promenljiva za čuvanje stila
+                // --- Obrada datuma isteka i bojenje ---
+                // Promenljiva za čuvanje stila
+                let expirationDateCellStyle = '';
                 // Koristimo formatirani datum za prikaz (DD.MM.YYYY.)
                 const displayExpirationDate = vehicle.expiration_date_formatted || 'N/A';
-                const displayRegistrationDate = vehicle.registration_date_formatted || 'N/A';
 
                 // Koristimo originalni datum (YYYY-MM-DD) za poređenje i bojenje
                 if (vehicle.expiration_date && typeof vehicle.expiration_date === 'string') {
@@ -72,12 +106,16 @@ document.addEventListener('DOMContentLoaded', () => {
                         }
                     } catch (e) {
                         console.error("Greška pri obradi originalnog datuma isteka (za bojenje):", vehicle.expiration_date, e);
-                        expirationDateCellStyle = 'background-color: #f8d7da; color: #721c24;'; // Oboji kao grešku
+                        expirationDateCellStyle = 'background-color: #f8d7da; color: #721c24;';
                     }
                 }
 
+
+                const displayRegistrationDate = vehicle.registration_date_formatted || 'N/A';
+
+                // Popunjavanje tabele 
                 row.innerHTML = `
-                    <td>${vehicle.mark || 'N/A'}</td>
+                    <td>${rowNumber}.</td> <td>${vehicle.mark || 'N/A'}</td>
                     <td>${vehicle.model || 'N/A'}</td>
                     <td>${vehicle.registration_number || 'N/A'}</td>
                     <td>${vehicle.type_name || 'N/A'}</td>
@@ -85,21 +123,56 @@ document.addEventListener('DOMContentLoaded', () => {
                     <td style="${expirationDateCellStyle}">${displayExpirationDate}</td>
                     <td>${vehicle.phone_number || 'N/A'}</td>
                     <td>${vehicle.email || 'N/A'}</td>
-                    `;
+                `;
                 vehicleTableBody.appendChild(row);
             });
+        }
+        renderPagination();
+    };
 
+    // Funkcija za dohvatanje svih vozila iz baze podataka
+    const fetchAllVehicles = async () => {
+    
+        vehicleTableBody.innerHTML = `<tr><td colspan="${colspanValue}" class="text-center">Učitavanje podataka...</td></tr>`;
+        if (messageDiv) messageDiv.textContent = '';
+        if (paginationControlsContainer) paginationControlsContainer.innerHTML = '';
 
-
-        } catch (error) {
-            console.error('Greška pri dohvatanju vozila:', error);
-            if (typeof showMessage === 'function') { // Proveri da li showMessage postoji
-                showMessage(`Greška pri učitavanju vozila: ${error.message}`, 'danger');
+        try {
+            const response = await fetch(`${apiBaseUrl}/vehicles`); // Dohvati sve
+            if (!response.ok) {
+                 let errorMsg = `HTTP greška! Status: ${response.status}`;
+                 try { const errData = await response.json(); errorMsg = errData.error || errorMsg; } catch (e) {}
+                 throw new Error(errorMsg);
             }
-            vehicleTableBody.innerHTML = `<tr><td colspan="8" class="text-center text-danger">Greška pri učitavanju podataka.</td></tr>`;
+            allVehiclesData = await response.json();
+            if (!Array.isArray(allVehiclesData)) {
+                 console.error("Odgovor sa servera nije niz:", allVehiclesData);
+                 throw new Error("Neočekivani format podataka sa servera.");
+            }
+            displayPage(1); // Prikaz prve stranice
+             if (allVehiclesData.length === 0) {
+                  // Koristi ažuriranu colspanValue
+                  vehicleTableBody.innerHTML = `<tr><td colspan="${colspanValue}" class="text-center">Nema unetih vozila u bazi.</td></tr>`;
+             }
+        } catch (error) {
+            console.error('Greška pri dohvatanju svih vozila:', error);
+            if (typeof showMessage === 'function') { showMessage(`Greška pri učitavanju vozila: ${error.message}`, 'danger'); }
+             // Koristi ažuriranu colspanValue
+            vehicleTableBody.innerHTML = `<tr><td colspan="${colspanValue}" class="text-center text-danger">Greška pri učitavanju podataka.</td></tr>`;
         }
     };
 
-    fetchAndInitTable();
+  
+    if (paginationControlsContainer) {
+        paginationControlsContainer.addEventListener('click', (event) => {
+            let pageToGo = currentPage;
+            if (event.target.id === 'prevPageBtn' && !event.target.disabled) { pageToGo = currentPage - 1; }
+            else if (event.target.id === 'nextPageBtn' && !event.target.disabled) { pageToGo = currentPage + 1; }
+            if (pageToGo !== currentPage && pageToGo >= 1) { displayPage(pageToGo); }
+        });
+    }
 
-});   
+   
+    fetchAllVehicles();
+
+});
