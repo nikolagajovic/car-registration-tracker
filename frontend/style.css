@@ -10,3 +10,24 @@
   transition: all 0.3s ease;
 }
 
+.action-icon {
+  cursor: pointer; 
+  font-size: 1.2rem; 
+  margin: 0 5px; 
+}
+
+.edit-icon {
+  color: #ffc107;
+}
+
+.edit-icon:hover {
+  color: #e0a800; 
+}
+
+.delete-icon {
+  color: #dc3545; 
+}
+
+.delete-icon:hover {
+  color: #c82333; 
+}

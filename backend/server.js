@@ -93,6 +93,33 @@ app.get('/api/vehicles', (req, res) => {
     });
 })
 
+// Ruta za brisanje vozila po ID-ju
+// PUTANJA: DELETE /api/vehicles/:id
+app.delete('/api/vehicles/:id', (req, res) => {
+    const vehicleId = req.params.id; // Uzima ID iz URL-a
+    const sql = "DELETE FROM vehicles WHERE id = ?"; // SQL komanda za brisanje
+
+    db.query(sql, [vehicleId], (err, results) => {
+        // Obrada greške iz baze
+        if (err) {
+            console.error(`Greška pri brisanju vozila sa ID ${vehicleId}:`, err);
+            // Provera specifične greške ako postoje strane veze
+            if (err.code === 'ER_ROW_IS_REFERENCED_2') {
+                 return res.status(400).json({ error: 'Nije moguće obrisati vozilo jer postoje povezani podaci.' });
+            }
+            return res.status(500).json({ error: 'Greška pri brisanju vozila iz baze podataka' });
+        }
+        // Provera da li je nešto obrisano
+        if (results.affectedRows === 0) {
+            // Ako nije, vozilo sa tim ID-jem nije ni postojalo
+            return res.status(404).json({ error: 'Vozilo za brisanje nije pronađeno' });
+        }
+        // Ako je sve uspešno
+        res.json({ message: 'Vozilo uspešno obrisano' });
+        
+    });
+});
+
 
 // Pokretanje servera
 app.listen(PORT, () => {

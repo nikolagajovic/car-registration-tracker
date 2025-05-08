@@ -1,14 +1,33 @@
 const apiBaseUrl = 'http://localhost:3000/api';
 const rowsPerPage = 15;
 
+let messageTimeoutId = null; // ID za timeout poruke
+
 // Funkcija za prikazivanje poruka
-function showMessage(message, type = 'danger', messageElementId = 'message') {
+function showMessage(message, type = 'danger', messageElementId = 'message', duration = 0) {
     const messageDiv = document.getElementById(messageElementId);
-    if (messageDiv) {
-        messageDiv.textContent = message;
-        messageDiv.className = `alert alert-${type} mt-4 mb-3`;
-    } else {
+    if (!messageDiv) {
         console.warn(`Element za poruke sa ID-jem '${messageElementId}' nije pronađen.`);
+        return;
+    }
+
+    // Prikaži poruku i postavi stil
+    messageDiv.textContent = message;
+    messageDiv.className = `alert alert-${type} mt-4 mb-3`; // Postavi klase odmah
+
+    // Očisti prethodni timeout ako postoji (da se poruke ne preklapaju)
+    if (messageTimeoutId) {
+        clearTimeout(messageTimeoutId);
+        messageTimeoutId = null;
+    }
+
+    // Ako je zadata dužina trajanja (veća od 0), postavi timeout za skrivanje
+    if (duration > 0) {
+        messageTimeoutId = setTimeout(() => {
+            messageDiv.textContent = ''; // Očisti tekst
+            messageDiv.className = 'mt-4 mb-3'; // Resetuj klase (sakrij alert)
+            messageTimeoutId = null; // Resetuj ID timeout-a
+        }, duration); // Vreme u milisekundama
     }
 }
 
@@ -16,11 +35,25 @@ document.addEventListener('DOMContentLoaded', () => {
     const vehicleTableBody = document.getElementById('vehiclesTableBody');
     const messageDiv = document.getElementById('message');
     const paginationControlsContainer = document.getElementById('paginationControls');
+    const deleteModalElement = document.getElementById('deleteConfirmModal');
+    const deleteConfirmBtn = document.getElementById('confirmDeleteBtn');
+    const editModalElement = document.getElementById('editVehicleModal');
 
 
     let allVehiclesData = [];
     let currentPage = 1;
-    const colspanValue = 9; // 9 jer imamo 9 kolona u tabeli 
+    const colspanValue = 9; // R.br + 8 podataka + izmena/brisanje
+    let vehicleIdToDelete = null; // Čuva ID vozila koje čeka potvrdu brisanja
+    let bsDeleteModal = null; // Bootstrap Modal instance za brisanje
+    let bsEditModal = null; // Bootstrap Modal instance za izmenu 
+
+    //Inicijalizacija Bootstrap Modala
+    if (deleteModalElement) {
+        bsDeleteModal = new bootstrap.Modal(deleteModalElement);
+    }
+     if (editModalElement) { // Inicijalizuj i edit modal ako postoji
+         bsEditModal = new bootstrap.Modal(editModalElement);
+     }
 
 
     // Funkcija za inicijalizaciju paginacije
@@ -123,6 +156,11 @@ document.addEventListener('DOMContentLoaded', () => {
                     <td style="${expirationDateCellStyle}">${displayExpirationDate}</td>
                     <td>${vehicle.phone_number || 'N/A'}</td>
                     <td>${vehicle.email || 'N/A'}</td>
+                    <td class="text-center"> <span class="edit-btn action-icon edit-icon" data-id="${vehicle.id}" title="Izmeni">
+                    <i class="fas fa-pencil-alt"></i> </span>
+                    <span class="delete-btn action-icon delete-icon" data-id="${vehicle.id}" title="Obriši">
+                     <i class="fas fa-trash-alt"></i> </span>
+                    </td>
                 `;
                 vehicleTableBody.appendChild(row);
             });
@@ -162,6 +200,97 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
+
+    // Funkcija za otvaranje Delete Modala 
+    const openDeleteModal = (vehicleId) => {
+        if (!bsDeleteModal) {
+            console.error("Modal za brisanje nije inicijalizovan.");
+            return;
+        }
+        vehicleIdToDelete = vehicleId; // Sačuvaj ID za kasnije
+        bsDeleteModal.show(); // Prikaži modal za potvrdu
+    };
+
+    // Funkcija za brisanje vozila
+    const deleteVehicle = async () => {
+        if (!vehicleIdToDelete) return; // Nema ID-ja za brisanje
+
+        // TODO: Dodati indikator učitavanja na dugme "Obriši" u modalu
+
+        try {
+            const response = await fetch(`${apiBaseUrl}/vehicles/${vehicleIdToDelete}`, {
+                method: 'DELETE'
+            });
+
+            // Čak i za greške, pokušaj da pročitaš JSON ako ga server šalje
+            let result = {};
+            try {
+                result = await response.json();
+            } catch(e) {
+                // Ako nema JSON tela (npr. status 204 No Content)
+                if (!response.ok && response.status !== 204) {
+                     throw new Error(`HTTP greška ${response.status}`);
+                }
+            }
+
+            if (!response.ok && response.status !== 204) {
+                throw new Error(result.error || `HTTP greška ${response.status}`);
+            }
+
+            // Uspeh!
+            bsDeleteModal.hide(); // Sakrij modal
+            // Prikaži poruku i sakrij je posle 1 sekunde (500ms)
+            showMessage('Vozilo uspešno obrisano!', 'success', 'message', 800);
+
+            // Ukloni vozilo iz lokalnog niza podataka
+            allVehiclesData = allVehiclesData.filter(v => v.id !== parseInt(vehicleIdToDelete));
+
+            // Ponovo prikaži trenutnu stranicu (ili prethodnu ako je ova postala prazna)
+            const totalPages = Math.ceil(allVehiclesData.length / rowsPerPage) || 1;
+            if(currentPage > totalPages) {
+                currentPage = totalPages; // Idi na poslednju postojeću stranicu
+            }
+            displayPage(currentPage); // Osveži prikaz tabele i paginacije
+
+        } catch (error) {
+            console.error("Greška pri brisanju vozila:", error);
+            bsDeleteModal.hide(); // Sakrij modal i u slučaju greške
+            showMessage(`Greška pri brisanju: ${error.message}`, 'danger'); // Prikaži grešku
+        } finally {
+             vehicleIdToDelete = null; // Resetuj ID bez obzira na ishod
+             // TODO: Ukloniti indikator učitavanja
+        }
+    };
+
+
+    // Event listener za klikove unutar tabele (Edit/Delete ikonice)
+    if (vehicleTableBody) {
+        vehicleTableBody.addEventListener('click', (event) => {
+            const target = event.target;
+            const editButton = target.closest('.edit-btn'); // Traži klik na ili unutar spana sa klasom edit-btn
+            const deleteButton = target.closest('.delete-btn'); // Traži klik na ili unutar spana sa klasom delete-btn
+
+            if (editButton) {
+                const vehicleId = editButton.dataset.id;
+                console.log("Kliknuto Izmeni za ID:", vehicleId); // Za debug
+                // Pozovi funkciju za otvaranje edit modala (ako je imaš)
+                // openEditModal(vehicleId);
+                return;
+            }
+
+            if (deleteButton) {
+                const vehicleId = deleteButton.dataset.id;
+                console.log("Kliknuto Obriši za ID:", vehicleId); // Za debug
+                openDeleteModal(vehicleId); // Otvori modal za potvrdu
+                return;
+            }
+        });
+    }
+
+    // --- Event listener za klik na potvrda brisanja u modalu ---
+    if (deleteConfirmBtn) {
+        deleteConfirmBtn.addEventListener('click', deleteVehicle); // Poziva funkciju za brisanje
+    }
   
     if (paginationControlsContainer) {
         paginationControlsContainer.addEventListener('click', (event) => {
