@@ -66,6 +66,79 @@
         </div>
     </div>
 
+    <div class="modal fade" id="editVehicleModal" tabindex="-1" aria-labelledby="editVehicleModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="editVehicleModalLabel">Izmeni Podatke o Vozilu</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="editVehicleForm" class="needs-validation" novalidate>
+                        <input type="hidden" id="editVehicleId">
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="editVehicleMark" class="form-label">Marka:</label>
+                                <input type="text" class="form-control" id="editVehicleMark" required>
+                                <div class="invalid-feedback">Molimo unesite marku.</div>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="editVehicleModel" class="form-label">Model:</label>
+                                <input type="text" class="form-control" id="editVehicleModel" required>
+                                <div class="invalid-feedback">Molimo unesite model.</div>
+                            </div>
+                        </div>
+                        <div class="row">
+                             <div class="col-md-6 mb-3">
+                                <label for="editVehicleType" class="form-label">Vrsta vozila:</label>
+                                <select class="form-select" id="editVehicleType" required>
+                                    <option value="" disabled selected>-- Učitavanje... --</option>
+                                    </select>
+                                <div class="invalid-feedback">Molimo izaberite vrstu.</div>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="editRegistrationNumber" class="form-label">Broj registracije:</label>
+                                <input type="text" class="form-control" id="editRegistrationNumber" required>
+                                 <div class="invalid-feedback">Molimo unesite broj registracije.</div>
+                            </div>
+                        </div>
+                         <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="editRegistrationDate" class="form-label">Datum registracije:</label>
+                                <input type="date" class="form-control" id="editRegistrationDate" required>
+                                 <div class="invalid-feedback">Molimo unesite datum registracije.</div>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="editExpirationDate" class="form-label">Datum isteka registracije:</label>
+                                <input type="date" class="form-control" id="editExpirationDate" required>
+                                <div class="invalid-feedback">Molimo unesite datum isteka.</div>
+                            </div>
+                        </div>
+                         <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="editPhoneNumber" class="form-label">Telefon:</label>
+                                <input type="tel" class="form-control" id="editPhoneNumber">
+                                </div>
+                             <div class="col-md-6 mb-3">
+                                <label for="editEmail" class="form-label">Email:</label>
+                                <input type="email" class="form-control" id="editEmail">
+                                <div class="invalid-feedback">Molimo unesite validan email.</div>
+                            </div>
+                        </div>
+                         <div id="editMessage" class="mt-3"></div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Otkaži</button>
+                    <button type="submit" form="editVehicleForm" class="btn btn-primary">Sačuvaj Izmene</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="modal fade" id="deleteConfirmModal" tabindex="-1" aria-hidden="true">
+        </div>
+
     <div class="modal fade" id="deleteConfirmModal" tabindex="-1" aria-labelledby="deleteConfirmModalLabel" aria-hidden="true">
         <div class="modal-dialog">
             <div class="modal-content">

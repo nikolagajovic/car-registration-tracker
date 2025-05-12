@@ -88,12 +88,110 @@ app.get('/api/vehicles', (req, res) => {
             return res.status(500).json({ error: 'Greška pri dohvatanju vozila iz baze podataka' });
         }
 
-      res.json(results);
-        
+        res.json(results);
+
     });
 })
 
-// Ruta za brisanje vozila po ID-ju
+// Funkcije za brisanje i ažuriranje vozila po id-ju
+
+
+// Funkcija za dohvatanje jednog vozila po id-ju
+// PUTANJA: GET /api/vehicles/:id (npr. /api/vehicles/15)
+// Vraća JSON objekat sa podacima jednog vozila
+app.get('/api/vehicles/:id', (req, res) => {
+    const vehicleId = req.params.id; // Dohvati id iz url parametra (npr 15)
+
+    const sql = `
+        SELECT 
+            v.id, 
+            v.mark, 
+            v.model, 
+            v.registration_number, 
+            DATE_FORMAT(v.registration_date, '%Y-%m-%d') AS registration_date,
+            DATE_FORMAT(v.expiration_date, '%Y-%m-%d') AS expiration_date,
+            v.phone_number, 
+            v.mail, 
+            v.vehicle_type_id, 
+            vt.type_name
+        FROM 
+            vehicles v
+        LEFT JOIN 
+            vehicle_type vt ON v.vehicle_type_id = vt.id
+        WHERE 
+            v.id = ?
+    `;
+
+    db.query(sql, [vehicleId], (err, results) => {
+        if (err) {
+            console.error(`Greška pri dohvatanju vozila sa ID ${vehicleId}:`, err); return res.status(500).json({ error: 'Greška pri dohvatanju podataka o vozilu' });
+        }
+        // Proveri da li je vozilo pronađeno
+        if (results.length === 0) {
+            return res.status(404).json({ error: 'Vozilo nije pronađeno' });
+        }
+        // Vrati podatke pronađenog vozila (prvi i jedini element niza)
+        res.json(results[0]);
+    });
+});
+
+// Funkcija za azuriranje vozila po id-ju
+// PUTANJA: PUT /api/vehicles/:id
+// Očekuje JSON telo sa ažuriranim podacima
+
+app.put('/api/vehicles/:id', (req, res) => {
+    const vehicleId = req.params.id;
+    const { vehicleType, vehicleMark, vehicleModel, registrationNumber, registrationDate, expirationDate, phoneNumber, email } = req.body;
+
+    if (!vehicleType || !vehicleMark || !vehicleModel || !registrationNumber || !registrationDate || !expirationDate || !phoneNumber || !email) {
+        
+        return res.status(400).json({ error: 'Nedostaju obavezni podaci za ažuriranje.' });
+    }
+
+    const query = `
+        UPDATE vehicles SET
+            vehicle_type_id = ?,
+            mark = ?,
+            model = ?,
+            registration_number = ?,
+            registration_date = ?,
+            expiration_date = ?,
+            phone_number = ?,
+            email = ?
+        WHERE id = ?
+    `;
+
+    const values = [
+        vehicleType, 
+        vehicleMark,
+        vehicleModel,
+        registrationNumber,
+        registrationDate, 
+        expirationDate,   
+        phoneNumber,
+        email,
+        vehicleId       
+    ]; 
+
+    db.query(query, values, (err, results) => {
+        if (err) {
+            console.error(`Greška pri ažuriranju vozila sa ID ${vehicleId}:`, err);
+            // Proveri specifične greške ako treba (npr. ER_DATA_TOO_LONG)
+            return res.status(500).json({ error: 'Greška pri ažuriranju vozila u bazi podataka' });
+        }
+        // Proveri da li je ijedan red zaista ažuriran
+        if (results.affectedRows === 0) {
+            // Ovo se dešava ako ID ne postoji
+            return res.status(404).json({ error: 'Vozilo za ažuriranje nije pronađeno' });
+        }
+        // Ako je sve uspešno
+        res.json({ message: 'Vozilo uspešno ažurirano' });
+    });
+
+});
+
+
+// Funkcija za brisanje vozila po id-ju
 // PUTANJA: DELETE /api/vehicles/:id
 app.delete('/api/vehicles/:id', (req, res) => {
     const vehicleId = req.params.id; // Uzima ID iz URL-a
@@ -105,7 +203,7 @@ app.delete('/api/vehicles/:id', (req, res) => {
             console.error(`Greška pri brisanju vozila sa ID ${vehicleId}:`, err);
             // Provera specifične greške ako postoje strane veze
             if (err.code === 'ER_ROW_IS_REFERENCED_2') {
-                 return res.status(400).json({ error: 'Nije moguće obrisati vozilo jer postoje povezani podaci.' });
+                return res.status(400).json({ error: 'Nije moguće obrisati vozilo jer postoje povezani podaci.' });
             }
             return res.status(500).json({ error: 'Greška pri brisanju vozila iz baze podataka' });
         }
@@ -116,7 +214,7 @@ app.delete('/api/vehicles/:id', (req, res) => {
         }
         // Ako je sve uspešno
         res.json({ message: 'Vozilo uspešno obrisano' });
-        
+
     });
 });
 

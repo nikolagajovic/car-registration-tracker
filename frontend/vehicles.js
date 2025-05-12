@@ -38,11 +38,23 @@ document.addEventListener('DOMContentLoaded', () => {
     const deleteModalElement = document.getElementById('deleteConfirmModal');
     const deleteConfirmBtn = document.getElementById('confirmDeleteBtn');
     const editModalElement = document.getElementById('editVehicleModal');
+    const editForm = document.getElementById('editVehicleForm');
+    const editVehicleIdInput = document.getElementById('editVehicleId');
+    const editVehicleTypeSelect = document.getElementById('editVehicleType');
+    const editVehicleMarkInput = document.getElementById('editVehicleMark');
+    const editVehicleModelInput = document.getElementById('editVehicleModel');
+    const editRegNumberInput = document.getElementById('editRegistrationNumber');
+    const editRegDateInput = document.getElementById('editRegistrationDate');
+    const editExpDateInput = document.getElementById('editExpirationDate');
+    const editPhoneInput = document.getElementById('editPhoneNumber');
+    const editEmailInput = document.getElementById('editEmail');
+    const editMessageDiv = document.getElementById('editMessage')
+
 
 
     let allVehiclesData = [];
     let currentPage = 1;
-    const colspanValue = 9; // R.br + 8 podataka + izmena/brisanje
+    const colspanValue = 10; // R.br + 8 podataka + izmena/brisanje
     let vehicleIdToDelete = null; // Čuva ID vozila koje čeka potvrdu brisanja
     let bsDeleteModal = null; // Bootstrap Modal instance za brisanje
     let bsEditModal = null; // Bootstrap Modal instance za izmenu 
@@ -51,9 +63,9 @@ document.addEventListener('DOMContentLoaded', () => {
     if (deleteModalElement) {
         bsDeleteModal = new bootstrap.Modal(deleteModalElement);
     }
-     if (editModalElement) { // Inicijalizuj i edit modal ako postoji
-         bsEditModal = new bootstrap.Modal(editModalElement);
-     }
+    if (editModalElement) { // Inicijalizuj i edit modal ako postoji
+        bsEditModal = new bootstrap.Modal(editModalElement);
+    }
 
 
     // Funkcija za inicijalizaciju paginacije
@@ -170,7 +182,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Funkcija za dohvatanje svih vozila iz baze podataka
     const fetchAllVehicles = async () => {
-    
+
         vehicleTableBody.innerHTML = `<tr><td colspan="${colspanValue}" class="text-center">Učitavanje podataka...</td></tr>`;
         if (messageDiv) messageDiv.textContent = '';
         if (paginationControlsContainer) paginationControlsContainer.innerHTML = '';
@@ -178,28 +190,112 @@ document.addEventListener('DOMContentLoaded', () => {
         try {
             const response = await fetch(`${apiBaseUrl}/vehicles`); // Dohvati sve
             if (!response.ok) {
-                 let errorMsg = `HTTP greška! Status: ${response.status}`;
-                 try { const errData = await response.json(); errorMsg = errData.error || errorMsg; } catch (e) {}
-                 throw new Error(errorMsg);
+                let errorMsg = `HTTP greška! Status: ${response.status}`;
+                try { const errData = await response.json(); errorMsg = errData.error || errorMsg; } catch (e) { }
+                throw new Error(errorMsg);
             }
             allVehiclesData = await response.json();
             if (!Array.isArray(allVehiclesData)) {
-                 console.error("Odgovor sa servera nije niz:", allVehiclesData);
-                 throw new Error("Neočekivani format podataka sa servera.");
+                console.error("Odgovor sa servera nije niz:", allVehiclesData);
+                throw new Error("Neočekivani format podataka sa servera.");
             }
             displayPage(1); // Prikaz prve stranice
-             if (allVehiclesData.length === 0) {
-                  // Koristi ažuriranu colspanValue
-                  vehicleTableBody.innerHTML = `<tr><td colspan="${colspanValue}" class="text-center">Nema unetih vozila u bazi.</td></tr>`;
-             }
+            if (allVehiclesData.length === 0) {
+                // Koristi ažuriranu colspanValue
+                vehicleTableBody.innerHTML = `<tr><td colspan="${colspanValue}" class="text-center">Nema unetih vozila u bazi.</td></tr>`;
+            }
         } catch (error) {
             console.error('Greška pri dohvatanju svih vozila:', error);
             if (typeof showMessage === 'function') { showMessage(`Greška pri učitavanju vozila: ${error.message}`, 'danger'); }
-             // Koristi ažuriranu colspanValue
+            // Koristi ažuriranu colspanValue
             vehicleTableBody.innerHTML = `<tr><td colspan="${colspanValue}" class="text-center text-danger">Greška pri učitavanju podataka.</td></tr>`;
         }
     };
 
+    // Editovanje vozila
+
+    //Funkcija za popunjavanje Select liste tipova vozila (za Edit Modal)
+    const fillVehicleTypesSelect = async (selectElementId) => {
+        const selectElement = document.getElementById(selectElementId);
+        if (!selectElement) {
+            console.error(`Select element sa ID ${selectElementId} nije pronađen.`);
+            return;
+        }
+        selectElement.innerHTML = '<option value="" disabled selected>-- Učitavanje... --</option>';
+        try {
+            const response = await fetch(`${apiBaseUrl}/vehicle`); // Koristi rutu za tipove
+            if (!response.ok) throw new Error(`Ne mogu da učitam tipove vozila (${response.status})`);
+            const types = await response.json();
+
+            // Očisti postojeće opcije (osim ako je greška) i dodaj podrazumevanu
+            selectElement.innerHTML = '<option value="" disabled>-- Izaberi vrstu --</option>';
+
+            types.forEach(type => {
+                const option = document.createElement('option');
+                option.value = type.id;
+                option.textContent = type.type_name; // Proveri naziv kolone iz API-ja
+                selectElement.appendChild(option);
+            });
+        } catch (error) {
+            console.error("Greška pri popunjavanju tipova vozila:", error);
+            selectElement.innerHTML = '<option value="" disabled>Greška pri učitavanju</option>';
+        }
+    };
+
+    const openEditModal = async (vehicleId) => {
+        // Proveri da li postoje modal i forma
+        if (!bsEditModal || !editForm) {
+            console.error("Edit modal ili forma nisu pravilno inicijalizovani.");
+            showMessage("Greška pri pripremi forme za izmenu.", "danger");
+            return;
+        }
+
+        // Resetuj formu i poruke pre otvaranja
+        editForm.classList.remove('was-validated');
+        editForm.reset(); // očisti predhodne unose
+        if (editMessageDiv) editMessageDiv.textContent = '';
+
+        try {
+            // 1. Dohvati podatke za konkretno vozilo sa servera
+            const response = await fetch(`${apiBaseUrl}/vehicles/${vehicleId}`);
+            if (!response.ok) {
+                let errorMsg = `Ne mogu da dohvatim podatke za vozilo ID: ${vehicleId}`;
+                try { const errData = await response.json(); errorMsg = errData.error || errorMsg; } catch (e) { }
+                throw new Error(errorMsg);
+            }
+            const vehicleData = await response.json();
+
+            // 2. Popuni formu u modalu dobijenim podacima
+            editVehicleIdInput.value = vehicleData.id;
+            editVehicleMarkInput.value = vehicleData.mark || '';
+            editVehicleModelInput.value = vehicleData.model || '';
+            editRegNumberInput.value = vehicleData.registration_number || '';
+            // Formatiraj datume za input type="date" (očekuje YYYY-MM-DD)
+            // Backend šalje originalne datume kao YYYY-MM-DD
+            editRegDateInput.value = vehicleData.registration_date || '';
+            editExpDateInput.value = vehicleData.expiration_date || '';
+            editPhoneInput.value = vehicleData.phone_number || '';
+            editEmailInput.value = vehicleData.email || '';
+            // Postavi selektovani tip vozila (ako je stigao vehicle_type_id)
+            editVehicleTypeSelect.value = vehicleData.vehicle_type_id || '';
+
+            // Očisti poruku o učitavanju
+            if (editMessageDiv) {
+                editMessageDiv.textContent = '';
+                editMessageDiv.className = 'mt-3'; // Resetuj klase
+            }
+
+            // 3. Prikaži modal
+            bsEditModal.show();
+
+        } catch (error) {
+            console.error("Greška pri otvaranju edit modala:", error);
+            // Sakrij modal ako je došlo do greške pri učitavanju
+            bsEditModal.hide();
+            // Prikaži grešku na glavnoj stranici
+            showMessage(`Greška pri pripremi izmene: ${error.message}`, 'danger');
+        }
+    };
 
     // Funkcija za otvaranje Delete Modala 
     const openDeleteModal = (vehicleId) => {
@@ -226,10 +322,10 @@ document.addEventListener('DOMContentLoaded', () => {
             let result = {};
             try {
                 result = await response.json();
-            } catch(e) {
+            } catch (e) {
                 // Ako nema JSON tela (npr. status 204 No Content)
                 if (!response.ok && response.status !== 204) {
-                     throw new Error(`HTTP greška ${response.status}`);
+                    throw new Error(`HTTP greška ${response.status}`);
                 }
             }
 
@@ -239,7 +335,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             // Uspeh!
             bsDeleteModal.hide(); // Sakrij modal
-            // Prikaži poruku i sakrij je posle 1 sekunde (500ms)
+            // Prikaži poruku i sakrij je posle 0.8 sekunde (800ms)
             showMessage('Vozilo uspešno obrisano!', 'success', 'message', 800);
 
             // Ukloni vozilo iz lokalnog niza podataka
@@ -247,7 +343,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             // Ponovo prikaži trenutnu stranicu (ili prethodnu ako je ova postala prazna)
             const totalPages = Math.ceil(allVehiclesData.length / rowsPerPage) || 1;
-            if(currentPage > totalPages) {
+            if (currentPage > totalPages) {
                 currentPage = totalPages; // Idi na poslednju postojeću stranicu
             }
             displayPage(currentPage); // Osveži prikaz tabele i paginacije
@@ -257,11 +353,66 @@ document.addEventListener('DOMContentLoaded', () => {
             bsDeleteModal.hide(); // Sakrij modal i u slučaju greške
             showMessage(`Greška pri brisanju: ${error.message}`, 'danger'); // Prikaži grešku
         } finally {
-             vehicleIdToDelete = null; // Resetuj ID bez obzira na ishod
-             // TODO: Ukloniti indikator učitavanja
+            vehicleIdToDelete = null; // Resetuj ID bez obzira na ishod
+            // TODO: Ukloniti indikator učitavanja
         }
     };
 
+
+    // Event listener za potvrdu edit forme
+    if (editForm) {
+        editForm.addEventListener('submit', async (event) => {
+            event.preventDefault(); // Spreči standardno slanje forme
+            event.stopPropagation();
+
+            // Primeni Bootstrap validaciju
+            editForm.classList.add('was-validated');
+            if (!editForm.checkValidity()) {
+                // Prikaži poruku unutar modala
+                if (editMessageDiv) showMessage('Molimo popunite sva obavezna polja.', 'warning', 'editMessage');
+                return; // Prekini ako forma nije validna
+            }
+
+            const vehicleId = editVehicleIdInput.value;
+            // Prikupi ažurirane podatke iz forme
+            const updatedData = {
+                vehicleType: editVehicleTypeSelect.value,
+                vehicleMark: editVehicleMarkInput.value.trim(),
+                vehicleModel: editVehicleModelInput.value.trim(),
+                registrationNumber: editRegNumberInput.value.trim(),
+                registrationDate: editRegDateInput.value,
+                expirationDate: editExpDateInput.value,
+                phoneNumber: editPhoneInput.value.trim(),
+                email: editEmailInput.value.trim()
+            };
+
+            try {
+                // Šalji PUT zahtev na backend
+                const response = await fetch(`${apiBaseUrl}/vehicles/${vehicleId}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(updatedData) // Šalji podatke kao JSON
+                });
+
+                const result = await response.json(); // Očekujemo JSON odgovor
+
+                if (!response.ok) {
+                    // Ako server vrati grešku, prikaži je
+                    throw new Error(result.error || `HTTP greška ${response.status}`);
+                }
+
+                // Uspeh!
+                bsEditModal.hide(); // Sakrij modal
+                showMessage('Vozilo uspešno ažurirano!', 'success'); // Poruka na glavnoj stranici
+                await fetchAllVehicles(); // Osveži prikaz tabele
+
+            } catch (error) {
+                console.error("Greška pri ažuriranju vozila:", error);
+                // Prikaži grešku unutar modala
+                if (editMessageDiv) showMessage(`Greška: ${error.message}`, 'danger', 'editMessage');
+            }
+        });
+    }
 
     // Event listener za klikove unutar tabele (Edit/Delete ikonice)
     if (vehicleTableBody) {
@@ -271,14 +422,15 @@ document.addEventListener('DOMContentLoaded', () => {
             const deleteButton = target.closest('.delete-btn'); // Traži klik na ili unutar spana sa klasom delete-btn
 
             if (editButton) {
+                event.preventDefault();
                 const vehicleId = editButton.dataset.id;
                 console.log("Kliknuto Izmeni za ID:", vehicleId); // Za debug
-                // Pozovi funkciju za otvaranje edit modala (ako je imaš)
-                // openEditModal(vehicleId);
+                openEditModal(vehicleId);
                 return;
             }
 
             if (deleteButton) {
+                event.preventDefault();
                 const vehicleId = deleteButton.dataset.id;
                 console.log("Kliknuto Obriši za ID:", vehicleId); // Za debug
                 openDeleteModal(vehicleId); // Otvori modal za potvrdu
@@ -291,7 +443,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (deleteConfirmBtn) {
         deleteConfirmBtn.addEventListener('click', deleteVehicle); // Poziva funkciju za brisanje
     }
-  
+
     if (paginationControlsContainer) {
         paginationControlsContainer.addEventListener('click', (event) => {
             let pageToGo = currentPage;
@@ -301,7 +453,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-   
+    fillVehicleTypesSelect('editVehicleType');
     fetchAllVehicles();
 
 });
