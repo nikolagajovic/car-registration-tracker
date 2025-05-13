@@ -100,37 +100,52 @@ app.get('/api/vehicles', (req, res) => {
 // PUTANJA: GET /api/vehicles/:id (npr. /api/vehicles/15)
 // Vraća JSON objekat sa podacima jednog vozila
 app.get('/api/vehicles/:id', (req, res) => {
-    const vehicleId = req.params.id; // Dohvati id iz url parametra (npr 15)
+    const vehicleIdParam = req.params.id; // Uzmi parametar kao string
+    console.log(`[BACKEND DEBUG] Primljen zahtev za GET /api/vehicles/:id. ID iz URL-a: '${vehicleIdParam}' (tip: ${typeof vehicleIdParam})`);
+
+    // Pokušaj da parsiraš ID u broj. Ako nije validan broj, vrati grešku.
+    const vehicleId = parseInt(vehicleIdParam, 10);
+    if (isNaN(vehicleId)) {
+        console.error(`[BACKEND DEBUG] Neispravan ID format: '${vehicleIdParam}'. Nije moguće parsirati u broj.`);
+        return res.status(400).json({ error: 'Neispravan format ID-ja vozila.' });
+    }
+    console.log(`[BACKEND DEBUG] Parsirani vehicleId za upit: ${vehicleId} (tip: ${typeof vehicleId})`);
 
     const sql = `
-        SELECT 
-            v.id, 
-            v.mark, 
-            v.model, 
-            v.registration_number, 
+        SELECT
+            v.id,
+            v.mark,
+            v.model,
+            v.registration_number,
             DATE_FORMAT(v.registration_date, '%Y-%m-%d') AS registration_date,
             DATE_FORMAT(v.expiration_date, '%Y-%m-%d') AS expiration_date,
-            v.phone_number, 
-            v.mail, 
-            v.vehicle_type_id, 
+            v.phone_number,
+            v.email,
+            v.vehicle_type_id,
             vt.type_name
-        FROM 
+        FROM
             vehicles v
-        LEFT JOIN 
+        LEFT JOIN
             vehicle_type vt ON v.vehicle_type_id = vt.id
-        WHERE 
+        WHERE
             v.id = ?
     `;
-
+    
     db.query(sql, [vehicleId], (err, results) => {
         if (err) {
-            console.error(`Greška pri dohvatanju vozila sa ID ${vehicleId}:`, err); return res.status(500).json({ error: 'Greška pri dohvatanju podataka o vozilu' });
+            // OVA PORUKA JE KLJUČNA - ŠTA TAČNO PIŠE OVDE?
+            console.error(`[BACKEND DEBUG] Greška pri dohvatanju vozila sa ID ${vehicleId} iz baze:`, JSON.stringify(err, null, 2));
+            return res.status(500).json({ error: 'Greška pri dohvatanju podataka o vozilu iz baze podataka.' });
         }
-        // Proveri da li je vozilo pronađeno
+
+        console.log(`[BACKEND DEBUG] Uspešno izvršen upit za ID ${vehicleId}. Broj rezultata: ${results.length}`);
+
         if (results.length === 0) {
+            console.log(`[BACKEND DEBUG] Vozilo sa ID ${vehicleId} nije pronađeno.`);
             return res.status(404).json({ error: 'Vozilo nije pronađeno' });
         }
-        // Vrati podatke pronađenog vozila (prvi i jedini element niza)
+
+        console.log("[BACKEND DEBUG] Pronađeno vozilo:", results[0]);
         res.json(results[0]);
     });
 });

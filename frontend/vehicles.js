@@ -49,6 +49,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const editPhoneInput = document.getElementById('editPhoneNumber');
     const editEmailInput = document.getElementById('editEmail');
     const editMessageDiv = document.getElementById('editMessage')
+    
 
 
 
@@ -184,7 +185,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const fetchAllVehicles = async () => {
 
         vehicleTableBody.innerHTML = `<tr><td colspan="${colspanValue}" class="text-center">Učitavanje podataka...</td></tr>`;
-        if (messageDiv) messageDiv.textContent = '';
+       
         if (paginationControlsContainer) paginationControlsContainer.innerHTML = '';
 
         try {
@@ -403,8 +404,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 // Uspeh!
                 bsEditModal.hide(); // Sakrij modal
-                showMessage('Vozilo uspešno ažurirano!', 'success'); // Poruka na glavnoj stranici
-                await fetchAllVehicles(); // Osveži prikaz tabele
+                showMessage('Vozilo uspešno ažurirano!', 'success', 'message', 800); 
+                await fetchAllVehicles();
 
             } catch (error) {
                 console.error("Greška pri ažuriranju vozila:", error);
