@@ -70,7 +70,8 @@ app.get('/api/vehicles', (req, res) => {
             v.registration_number,
             DATE_FORMAT(v.registration_date, '%d.%m.%Y.') AS registration_date_formatted,
             DATE_FORMAT(v.expiration_date, '%d.%m.%Y.') AS expiration_date_formatted,
-            v.expiration_date,
+            DATE_FORMAT(v.registration_date, '%Y-%m-%d') AS registration_date,
+            DATE_FORMAT(v.expiration_date, '%Y-%m-%d') AS expiration_date,
             vt.type_name,
             v.phone_number,
             v.email
@@ -118,7 +119,7 @@ app.get('/api/vehicles/:id', (req, res) => {
             v.model,
             v.registration_number,
             DATE_FORMAT(v.registration_date, '%Y-%m-%d') AS registration_date,
-            DATE_FORMAT(v.expiration_date, '%Y-%m-%d') AS expiration_date,
+            DATE_FORMAT(v.expiration_date, '%Y-%m-%d') AS expiration_date,s
             v.phone_number,
             v.email,
             v.vehicle_type_id,
