@@ -65,10 +65,6 @@ RegiTrack is a web application designed for managing and tracking vehicle regist
     ```bash
     npm install
     ```
-    or if using Yarn:
-    ```bash
-    yarn install
-    ```
 3.  Create a `.env` file in the `backend` folder and add your **local** MySQL database credentials:
     ```dotenv
     PORT=3000
