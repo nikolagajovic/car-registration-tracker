@@ -5,22 +5,19 @@ const express = require('express');
 require('dotenv').config(); 
 
 const app = express();
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT;
 
 //Middleware
 app.use(cors()); 
 app.use(bodyParser.json()); 
 
-app.get('/ping', (req, res) => {
-    res.send('Pong! Backend je živ.');
-});
 
 const dbConfig = {
     host: process.env.DB_HOST,
     user: process.env.DB_USER,
     password: process.env.DB_PASSWORD,
     database: process.env.DB_NAME,
-    port: parseInt(process.env.DB_PORT || '3306'), 
+    port: parseInt(process.env.DB_PORT), 
     waitForConnections: true,
     connectionLimit: 10, 
     queueLimit: 0,      
@@ -39,17 +36,15 @@ const pool = mysql.createPool(dbConfig);
         connection.release(); // Vrati konekciju u pool
     } catch (err) {
         console.error('KRITIČNA GREŠKA: Povezivanje sa bazom preko pool-a nije uspelo:', err);
-        // U produkciji, ovde bi trebalo prekinuti rad servera
-        // process.exit(1);
     }
 })();
 
 
 // Funkcija za dohvatanje svih tipova vozila iz baze podataka
-app.get('/api/vehicle', async (req, res) => { // Dodat async
+app.get('/api/vehicle', async (req, res) => {
     try {
-        // Proveri da li se tabela zove 'vehicle_type'
-        const [results] = await pool.query('SELECT id, type_name FROM vehicle_type');
+      
+        const [results] = await pool.query('SELECT id, type_name FROM vehicle_types');
         res.json(results);
     } catch (err) {
         console.error('Greška pri dohvatanju tipova vozila [GET /api/vehicle]:', err);
@@ -58,7 +53,7 @@ app.get('/api/vehicle', async (req, res) => { // Dodat async
 });
 
 // Funkcija za dodavanje novog vozila u bazu podataka
-app.post('/api/vehicles', async (req, res) => { // Dodat async
+app.post('/api/vehicles', async (req, res) => { 
     const { vehicleType, vehicleMark, vehicleModel, registrationNumber, registrationDate, expirationDate, phoneNumber, email } = req.body;
 
     if (!vehicleType || !vehicleMark || !vehicleModel || !registrationNumber || !registrationDate || !expirationDate || !phoneNumber || !email) {
@@ -96,7 +91,7 @@ app.get('/api/vehicles', async (req, res) => { // Dodat async
         FROM
             vehicles v
         LEFT JOIN
-            vehicle_type vt ON v.vehicle_type_id = vt.id -- Proveri naziv tabele
+            vehicle_types vt ON v.vehicle_type_id = vt.id 
         ORDER BY
             v.id DESC
     `;
@@ -132,7 +127,7 @@ app.get('/api/vehicles/:id', async (req, res) => {
         FROM
             vehicles v
         LEFT JOIN
-            vehicle_type vt ON v.vehicle_type_id = vt.id -- Proveri naziv tabele
+            vehicle_types vt ON v.vehicle_type_id = vt.id 
         WHERE
             v.id = ?
     `;
@@ -164,7 +159,7 @@ app.put('/api/vehicles/:id', async (req, res) => {
 
     const { vehicleType, vehicleMark, vehicleModel, registrationNumber, registrationDate, expirationDate, phoneNumber, email } = req.body;
 
-    // Prilagodi validaciju ako neka polja nisu obavezna za UPDATE
+    // Validacija za polja koja su obavezna za UPDATE
     if (!vehicleType || !vehicleMark || !vehicleModel || !registrationNumber || !registrationDate || !expirationDate || !phoneNumber || !email  ) {
         return res.status(400).json({ error: 'Nedostaju osnovni obavezni podaci za ažuriranje.' });
     }
@@ -210,7 +205,7 @@ app.delete('/api/vehicles/:id', async (req, res) => {
         if (results.affectedRows === 0) {
             return res.status(404).json({ error: 'Vozilo za brisanje nije pronađeno' });
         }
-        res.json({ message: 'Vozilo uspešno obrisano' }); // Ili res.status(204).send();
+        res.json({ message: 'Vozilo uspešno obrisano' });
     } catch (err) {
         console.error(`Greška pri brisanju vozila sa ID ${vehicleId} [DELETE /api/vehicles/:id]:`, err);
         if (err.code === 'ER_ROW_IS_REFERENCED_2') {
