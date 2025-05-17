@@ -4,7 +4,7 @@ const message = document.getElementById('message');
 
 // Funkcija za učitavanje tipova vozila iz baze podataka
 window.addEventListener('DOMContentLoaded', async () => {
-    const res = await fetch(`${apiBaseUrl}/vehicle`);
+    const res = await fetch(`${apiBaseUrl}/api/vehicle`);
     const vehicles = await res.json();
 
     vehicles.forEach(vehicle => {
@@ -31,7 +31,7 @@ form.addEventListener('submit', async (e) => {
         email: document.getElementById('email').value.trim(),
     };
 
-    const res = await fetch(`${apiBaseUrl}/vehicles`, {
+    const res = await fetch(`${apiBaseUrl}/api/vehicles`, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json'

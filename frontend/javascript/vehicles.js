@@ -188,7 +188,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (paginationControlsContainer) paginationControlsContainer.innerHTML = '';
 
         try {
-            const response = await fetch(`${apiBaseUrl}/vehicles`); // Dohvati sve
+            const response = await fetch(`${apiBaseUrl}/api/vehicles`); // Dohvati sve
             if (!response.ok) {
                 let errorMsg = `HTTP greška! Status: ${response.status}`;
                 try { const errData = await response.json(); errorMsg = errData.error || errorMsg; } catch (e) { }
@@ -223,7 +223,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         selectElement.innerHTML = '<option value="" disabled selected>-- Učitavanje... --</option>';
         try {
-            const response = await fetch(`${apiBaseUrl}/vehicle`); // Koristi rutu za tipove
+            const response = await fetch(`${apiBaseUrl}/api/vehicle`); // Koristi rutu za tipove
             if (!response.ok) throw new Error(`Ne mogu da učitam tipove vozila (${response.status})`);
             const types = await response.json();
 
@@ -257,7 +257,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         try {
             // 1. Dohvati podatke za konkretno vozilo sa servera
-            const response = await fetch(`${apiBaseUrl}/vehicles/${vehicleId}`);
+            const response = await fetch(`${apiBaseUrl}/api/vehicles/${vehicleId}`);
             if (!response.ok) {
                 let errorMsg = `Ne mogu da dohvatim podatke za vozilo ID: ${vehicleId}`;
                 try { const errData = await response.json(); errorMsg = errData.error || errorMsg; } catch (e) { }
@@ -314,7 +314,7 @@ document.addEventListener('DOMContentLoaded', () => {
         // TODO: Dodati indikator učitavanja na dugme "Obriši" u modalu
 
         try {
-            const response = await fetch(`${apiBaseUrl}/vehicles/${vehicleIdToDelete}`, {
+            const response = await fetch(`${apiBaseUrl}/api/vehicles/${vehicleIdToDelete}`, {
                 method: 'DELETE'
             });
 
@@ -388,7 +388,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             try {
                 // Šalji PUT zahtev na backend
-                const response = await fetch(`${apiBaseUrl}/vehicles/${vehicleId}`, {
+                const response = await fetch(`${apiBaseUrl}/api/vehicles/${vehicleId}`, {
                     method: 'PUT',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(updatedData) // Šalji podatke kao JSON

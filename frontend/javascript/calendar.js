@@ -41,7 +41,7 @@ document.addEventListener('DOMContentLoaded', function() {
               // Funkcija koja dohvata događaje (isteke registracija)
             events: async function(fetchInfo, successCallback, failureCallback) {
                 try {
-                    const response = await fetch(`${apiBaseUrl}/vehicles`);
+                    const response = await fetch(`${apiBaseUrl}/api/vehicles`);
                     if (!response.ok) {
                         let errorMsg = `HTTP greška! Status: ${response.status}`;
                         try { const errData = await response.json(); errorMsg = errData.error || errorMsg; } catch (e) {}
