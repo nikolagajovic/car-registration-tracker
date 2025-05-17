@@ -11,6 +11,9 @@ const PORT = process.env.PORT || 3000;
 app.use(cors()); 
 app.use(bodyParser.json()); 
 
+app.get('/ping', (req, res) => {
+    res.send('Pong! Backend je živ.');
+});
 
 const dbConfig = {
     host: process.env.DB_HOST,
