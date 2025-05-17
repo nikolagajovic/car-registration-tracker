@@ -1,4 +1,3 @@
-const apiBaseUrl = 'http://localhost:3000/api';
 
 function showMessage(message, type = 'danger', messageElementId = 'message') {
     const messageDiv = document.getElementById(messageElementId);

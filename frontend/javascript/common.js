@@ -1,3 +1,5 @@
+const apiBaseUrl = 'https://car-registration-tracker-backend.onrender.com';
+
 document.addEventListener('DOMContentLoaded', () => {
     // Dohvata putanju i izvlaci ime fajla (npr. "vehicles.html")
     const currentPath = window.location.pathname;

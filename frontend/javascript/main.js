@@ -1,7 +1,6 @@
 const form = document.getElementById('vehicleForm');
 const vehiclesType = document.getElementById('vehicleType');
 const message = document.getElementById('message');
-const apiBaseUrl = 'http://localhost:3000/api';
 
 // Funkcija za učitavanje tipova vozila iz baze podataka
 window.addEventListener('DOMContentLoaded', async () => {

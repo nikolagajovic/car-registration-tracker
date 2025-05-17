@@ -1,4 +1,3 @@
-const apiBaseUrl = 'http://localhost:3000/api';
 const rowsPerPage = 15;
 
 let messageTimeoutId = null; // ID za timeout poruke
